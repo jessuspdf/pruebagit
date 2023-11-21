@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador Léxico y Sintáctico</title>
+    <style>
+       body {
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        textarea {
+            display: block;
+            margin: 0 auto;
+            text-align: center;
+            vertical-align: middle;
+            background-color: white; 
+            color: black; 
+            width: 80%;
+            margin: 10px auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            display: block;
+            margin: 0 auto;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 16px;
+            background: blue;
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Analizador Léxico y Sintáctico</h1>
+
+    <textarea id="codigo" rows="5" cols="40" placeholder=""></textarea><br>
+    <button onclick="analizar()">Analizar</button>
+
+    <h2>Resultados Léxicos</h2>
+    <textarea id="resultadosLexicos" rows="5" cols="40" readonly></textarea>
+
+    <h2>Resultados Sintácticos</h2>
+    <textarea id="resultadosSintacticos" rows="5" cols="40" readonly></textarea>
+        }
+    </style>
+</head>
+<body>
+    <h1>Analizador Léxico y Sintáctico</h1>
+
+    <textarea id="codigo" rows="5" cols="40" placeholder="Escribe una estructura de asignación y suma"></textarea><br>
+    <button onclick="analizar()">Analizar</button>
+
+    <h2>Resultados Léxicos</h2>
+    <textarea id="resultadosLexicos" rows="5" cols="40" readonly></textarea>
+
+    <h2>Resultados Sintácticos</h2>
+    <textarea id="resultadosSintacticos" rows="5" cols="40" readonly></textarea>
+
+    <script>
+        function analizar() {
+            const codigo = document.getElementById("codigo").value;
+            const resultadosLexicosTextarea = document.getElementById("resultadosLexicos");
+            const resultadosSintacticosTextarea = document.getElementById("resultadosSintacticos");
+
+            
+            const resultadosLexicos = analizarLexico(codigo);
+
+            
+            mostrarResultados(resultadosLexicosTextarea, "Resultado", resultadosLexicos);
+
+            
+            const resultadosSintacticos = analizarSintactico(resultadosLexicos);
+
+           
+            mostrarResultados(resultadosSintacticosTextarea, "Resultado", resultadosSintacticos);
+        }
+
+        function analizarLexico(codigo) {
+            const palabrasClave = ["if", "else", "while", "for", "entero", "gato", "perro", "pez", "Granjita llena"];
+            const simbolos = ["(", ")", "{", "}", "//", "=", "<", ">", ";", "+", "-", "*", "/"];
+
+            const resultados = [];
+
+            const lineas = codigo.split('\n');
+            for (let linea of lineas) {
+                const tokens = linea.split(/[\s,]+/);
+                for (let token of tokens) {
+                    token = token.trim();
+                    if (token === "") {
+                        continue;
+                    }
+                    if (palabrasClave.includes(token)) {
+                        resultados.push({ tipo: "Palabra clave", valor: token });
+                    } else if (simbolos.includes(token)) {
+                        resultados.push({ tipo: "Símbolo / Operador", valor: token });
+                    } else if (/^\d+$/.test(token)) {
+                        resultados.push({ tipo: "Número", valor: token });
+                    } else if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(token)) {
+                        resultados.push({ tipo: "Identificador", valor: token });
+                    } else {
+                        resultados.push({ tipo: "Desconocido", valor: token });
+                    }
+                }
+            }
+
+            return resultados;
+        }
+function analizarSintactico(resultadosLexicos) {
+    const resultadosSintacticos = [];
+
+    
+    let esDeclaracionValida = false;
+
+    for (let i = 0; i < resultadosLexicos.length; i++) {
+        const token = resultadosLexicos[i];
+
+       
+        if (!esDeclaracionValida && token.tipo === "Identificador" && resultadosLexicos[i + 1]?.valor === "=" && resultadosLexicos[i + 2]?.tipo === "Número") {
+            resultadosSintacticos.push({ tipo: "Declaración válida", valor: `${token.valor} = ${resultadosLexicos[i + 2].valor}` });
+            esDeclaracionValida = true;
+            i += 2; 
+        } else if (!esDeclaracionValida) {
+            resultadosSintacticos.push({ tipo: "Error sintáctico", valor: "Declaración inválida" });
+            break; 
+        }
+
+        
+        if (esDeclaracionValida && token.tipo === "Símbolo / Operador" && token.valor === "+" && resultadosLexicos[i + 1]?.tipo === "Número") {
+            resultadosSintacticos.push({ tipo: "Suma válida", valor: `${resultadosLexicos[i - 2].valor} ${token.valor} ${resultadosLexicos[i + 1].valor}` });
+            break;
+        } else if (esDeclaracionValida && token.tipo === "Símbolo / Operador" && token.valor === "+") {
+            resultadosSintacticos.push({ tipo: "Error sintáctico", valor: "Suma inválida" });
+            break; 
+        }
+    }
+
+    return resultadosSintacticos;
+}
+
+
+
+        function mostrarResultados(textArea, titulo, resultados) {
+            textArea.value = `${titulo}:\n\n`;
+
+            for (let resultado of resultados) {
+                textArea.value += `${resultado.tipo}: ${resultado.valor}\n`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador Léxico y Sintáctico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: white;
+        }
+
+        textarea {
+            display: block;
+            margin: 0 auto;
+            text-align: center;
+            vertical-align: middle;
+            background-color: white;
+            color: black;
+            width: 80%;
+            margin: 10px auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            display: block;
+            margin: 0 auto;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 16px;
+            background: blue;
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Analizador Léxico y Sintáctico</h1>
+
+    <textarea id="codigo" rows="5" cols="40" placeholder=""></textarea><br>
+    <button onclick="analizar()">Analizar</button>
+
+    <h2>Resultados Léxicos</h2>
+    <textarea id="resultadosLexicos" rows="5" cols="40" readonly></textarea>
+
+    <h2>Resultados Sintácticos</h2>
+    <textarea id="resultadosSintacticos" rows="5" cols="40" readonly></textarea>
+
+    <script>
+        function analizar() {
+            const codigo = document.getElementById("codigo").value;
+            const resultadosLexicosTextarea = document.getElementById("resultadosLexicos");
+            const resultadosSintacticosTextarea = document.getElementById("resultadosSintacticos");
+
+            // Realizar el análisis léxico
+            const resultadosLexicos = analizarLexico(codigo);
+
+            // Mostrar resultados léxicos
+            mostrarResultados(resultadosLexicosTextarea, "Resultado", resultadosLexicos);
+
+            // Realizar el análisis sintáctico
+            const resultadosSintacticos = analizarSintactico(codigo);
+
+            // Mostrar resultados sintácticos
+            mostrarResultados(resultadosSintacticosTextarea, "Resultado", resultadosSintacticos);
+        }
+
+        function analizarLexico(codigo) {
+            const palabrasClave = ["if", "else", "while", "for", "pato", "escribe", "perro", "pez", "Granjita llena"];
+            const operadores = ["==", "<", ">", "!=", "+", "-", "*", "/"];
+            const parentesis = ["(", ")"];
+
+            const resultadosLexicos = [];
+
+            // Dividir el código en líneas
+            const lineas = codigo.split('\n');
+
+            for (let i = 0; i < lineas.length; i++) {
+                const linea = lineas[i].trim();
+                const tokens = linea.split(/[\s,]+/);
+
+                for (let token of tokens) {
+                    token = token.trim();
+                    if (token === "") {
+                        continue;
+                    }
+
+                    if (palabrasClave.includes(token)) {
+                        resultadosLexicos.push({ tipo: "Palabra clave", valor: token });
+                    } else if (operadores.includes(token)) {
+                        resultadosLexicos.push({ tipo: "Operador", valor: token });
+                    } else if (parentesis.includes(token)) {
+                        resultadosLexicos.push({ tipo: "Paréntesis", valor: token });
+                    } else if (/^\d+$/.test(token)) {
+                        resultadosLexicos.push({ tipo: "Número", valor: token });
+                    } else if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(token)) {
+                        resultadosLexicos.push({ tipo: "Identificador", valor: token });
+                    } else {
+                        resultadosLexicos.push({ tipo: "Desconocido", valor: token });
+                    }
+                }
+            }
+
+            return resultadosLexicos;
+        }
+
+        function analizarSintactico(codigo) {
+            const resultadosSintacticos = [];
+
+            // Variable para el análisis sintáctico
+            let esIfValido = false;
+            let esElseValido = false;
+
+            // Dividir el código en líneas
+            const lineas = codigo.split('\n');
+
+            for (let i = 0; i < lineas.length; i++) {
+                const linea = lineas[i].trim();
+
+                // Verificar la estructura del if
+                if (!esIfValido && linea.startsWith("if (") && linea.endsWith(") {")) {
+                    resultadosSintacticos.push({ tipo: "Estructura if válida", valor: linea });
+                    esIfValido = true;
+                } else if (!esIfValido && linea.startsWith("if (")) {
+                    resultadosSintacticos.push({ tipo: "Error sintáctico", valor: "Estructura if incompleta" });
+                    break;
+                } else if (!esIfValido && linea.endsWith(") {")) {
+                    resultadosSintacticos.push({ tipo: "Error sintáctico", valor: "Inicio de estructura if faltante" });
+                    break;
+                }
+
+                // Verificar la estructura del else
+                if (esIfValido && !esElseValido && linea === "} else {") {
+                    resultadosSintacticos.push({ tipo: "Estructura else válida", valor: linea });
+                    esElseValido = true;
+                } else if (esIfValido && !esElseValido && linea.startsWith("else {")) {
+                    resultadosSintacticos.push({ tipo: "Error sintáctico", valor: "Estructura else sin if correspondiente" });
+                    break;
+                } else if (esIfValido && !esElseValido && linea === "} else {") {
+                    resultadosSintacticos.push({ tipo: "Error sintáctico", valor: "Inicio de estructura else faltante" });
+                    break;
+                }
+            }
+
+            return resultadosSintacticos;
+        }
+
+        function mostrarResultados(textArea, titulo, resultados) {
+            textArea.value = `${titulo}:\n\n`;
+
+            for (let resultado of resultados) {
+                textArea.value += `${resultado.tipo}: ${resultado.valor}\n`;
+            }
+        }
+    </script>
+</body>
+</html>
